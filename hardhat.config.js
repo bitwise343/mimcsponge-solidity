@@ -25,7 +25,8 @@ module.exports = {
                         runs: 2000000
                     }
                 }
-            }
+            },
+            { version: "0.6.12" }
         ]
     }
 };

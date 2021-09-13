@@ -19,6 +19,7 @@ describe('MiMCSponge', function() {
         )
         this.mimcHasherPython = await deployContract('MiMCHasherPython')
         this.mimcHasherYul = await deployContract('MiMCHasherYul')
+        this.hasher = await deployContract('Hasher')
         this.calldata = this.mimcHasherPython.interface.encodeFunctionData(
             'MiMCSponge(uint,uint)', [1, 1]
         )
@@ -51,6 +52,14 @@ describe('MiMCSponge', function() {
         expect(xR).to.be.equal(this.xR)
     })
 
+    it("Hasher should match js implementation", async () => {
+        const result = await this.hasher.MiMCSponge(1, 1)
+        const xL = toBN(result.xL)
+        const xR = toBN(result.xR)
+        expect(xL).to.be.equal(this.xL)
+        expect(xR).to.be.equal(this.xR)
+    })
+
     it("gas estimates", async() => {
         const estimateCircomlib = await ethers.provider.send(
             'eth_estimateGas',
@@ -64,6 +73,10 @@ describe('MiMCSponge', function() {
             'eth_estimateGas',
             [{to: this.mimcHasherYul.address, data: this.calldata}]
         )
+        const estimateHasher = await ethers.provider.send(
+            'eth_estimateGas',
+            [{to: this.hasher.address, data: this.calldata}]
+        )
         console.log('circomlib gas estimate: ',
             toBN(estimateCircomlib).toString()
         )
@@ -76,6 +89,11 @@ describe('MiMCSponge', function() {
             toBN(estimateYul).toString(),
             'relative to circomlib: ',
             Number(toBN(estimateYul))/Number(toBN(estimateCircomlib))
+        )
+        console.log('hasher gas estimate: ',
+            toBN(estimateHasher).toString(),
+            'relative to circomlib: ',
+            Number(toBN(estimateHasher))/Number(toBN(estimateCircomlib))
         )
     })
 })
