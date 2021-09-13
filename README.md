@@ -19,9 +19,12 @@ then you can generate the file using
 (venv) $ python generate_mimchasher_contract.py
 ```
 
-# Results
+# Initial Results
 ```sh
 circomlib gas estimate:  38804
 python gas estimate:  48282 relative to circomlib:  1.2442531697763117
 yul gas estimate:  83982 relative to circomlib:  2.16426141634883
 ```
+# Final Results
+TODO:
+Next step is to plug this into the MerkleTree and compare costs.

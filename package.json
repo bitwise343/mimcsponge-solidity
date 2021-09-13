@@ -7,8 +7,6 @@
     "circomlib": "^0.5.3",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.6",
-    "hardhat": "^2.6.4",
-    "hardhat-gas-reporter": "^1.0.4",
-    "snarkjs": "^0.4.7"
+    "hardhat": "^2.6.4"
   }
 }
