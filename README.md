@@ -24,6 +24,7 @@ then you can generate the file using
 circomlib gas estimate:  38804
 python gas estimate:  48282 relative to circomlib:  1.2442531697763117
 yul gas estimate:  83982 relative to circomlib:  2.16426141634883
+hasher gas estimate:  141040 relative to circomlib:  3.6346768374394394
 ```
 # Final Results
 TODO:
