@@ -25,6 +25,14 @@ circomlib gas estimate:  38804
 python gas estimate:  48282 relative to circomlib:  1.2442531697763117
 yul gas estimate:  83982 relative to circomlib:  2.16426141634883
 ```
+
 # Final Results
-TODO:
 Next step is to plug this into the MerkleTree and compare costs.
+```sh
+MerkleTree
+caller gas used:  916364
+  ✓ InsertCaller (512ms)
+internal gas used:  1255785
+  ✓ InsertInternal (468ms)
+```
+It is still more gas inefficient, even though it doesn't use `CALL` opcode
