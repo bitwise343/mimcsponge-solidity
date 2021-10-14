@@ -33,9 +33,14 @@ yul gas estimate:  83982 relative to circomlib:  2.16426141634883
 Next step is to plug this into the MerkleTree and compare costs.
 ```sh
 MerkleTree
-caller gas used:  916364
-  ✓ InsertCaller (512ms)
-internal gas used:  1255785
-  ✓ InsertInternal (468ms)
+caller gas used:  914657
+  ✓ InsertCaller (432ms)
+caller gas used:  1292697
+  ✓ InsertCaller2 (497ms)
+internal gas used:  1255538
+  ✓ InsertInternal (437ms)
+final gas used:  904133
+  ✓ InsertFinal (803ms)
+
 ```
-It is still more gas inefficient, even though it doesn't use `CALL` opcode
+`final gas used` is for the yul verbatim contract, and it's cheaper than the caller!
