@@ -1,5 +1,6 @@
 ;; MiMCSponge uses two values from the stack and pushes two values to the
-;; stack.
+;; stack. To test this assembly, uncomment the two PUSH instructions below, then
+;; run `evm --debug run MiMCSponge.easm`
 
 ;; PUSH 2
 ;; PUSH 1
