@@ -1,3 +1,6 @@
+# Update
+I've included raw assembly into a Yul contract, because now Solidity compiler enables this using the `verbatim` builtin function as of 0.8.5. This actually saved 10k gas on the merkle tree now! Interestingly, though, it takes longer to compute. On an L2 like Arbitrum, where gas pricing is related to computational time rather than per opcode gas costs, this should cost more. However, on L1 this can save 10k gas per merkle tree insertion.
+
 # MiMCSponge in Pure Solidity
 Here I test two different solidity implementations of the MiMCSponge hasher as used by Tornado cash. If we can get a pure solidity implementation, then the hasher contract can be included in the Merkle Tree, instead of being a library/external contract.
 

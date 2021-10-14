@@ -37,20 +37,44 @@ code_fragments = [
             _xL := e'''
 ]
 
+code = ''
+
 for i in range(N-1):
     seed = keccak(seed)
-    code += ''.join([
-        code_fragments[0] % (toHex(seed)) if i < N-2 else code_fragments[0] % (toHex(0)),
-        code_fragments[1]
-    ])
+    code += '''SWAP1
+DUP3
+DUP3
+PUSH %s
+ADDMOD
+DUP4
+SWAP1
+DUP2
+DUP1
+DUP3
+DUP1
+MULMOD
+DUP1
+MULMOD
+MULMOD
+DUP4
+SWAP2
+ADDMOD
+''' % seed.hex()
 
-code += '''
-            xL := _xR
-            xR := _xL
-        }}
-    }
-}
-'''
+    # code += ''.join([
+    #     code_fragments[0] % (toHex(seed)) if i < N-2 else code_fragments[0] % (toHex(0)),
+    #     code_fragments[1]
+    # ])
 
-with open('./contracts/MiMCHasherPython.sol', 'w+') as f:
+# code += '''
+#             xL := _xR
+#             xR := _xL
+#         }}
+#     }
+# }
+# '''
+
+# with open('./contracts/MiMCHasherPython.sol', 'w+') as f:
+#     f.write(code)
+with open('./rounds.easm', 'w+') as f:
     f.write(code)

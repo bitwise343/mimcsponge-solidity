@@ -4,8 +4,11 @@ const {
     deployContract,
     deployWithAbiAndBytecode
 } = require('../scripts/hardhat.utils.js')
+
 const { mimcsponge } = require('circomlib')
 const genContract = require('../scripts/mimcsponge_gencontract.js')
+
+const mimcJson = require('./MiMC.json')
 
 const toBN = n => new ethers.BigNumber.from(n.toString())
 
@@ -17,18 +20,25 @@ describe('MiMCSponge', function() {
         this.mimcHasherCircomlib = await deployWithAbiAndBytecode(
             'MiMCHasherCircomlib', circomlibAbi, circomlibBytecode
         )
+        this.mimcSponge = await deployWithAbiAndBytecode(
+            'MiMCSponge',
+            mimcJson.abi,
+            mimcJson.bytecode
+        )
         this.mimcHasherPython = await deployContract('MiMCHasherPython')
         this.mimcHasherYul = await deployContract('MiMCHasherYul')
         this.calldata = this.mimcHasherPython.interface.encodeFunctionData(
-            'MiMCSponge(uint,uint)', [1, 1]
+            'MiMCSponge(uint,uint)', [1, 2]
         )
-        const { xL, xR } = mimcsponge.hash(1, 1, 0)
+        const { xL, xR } = mimcsponge.hash(1, 2, 0)
         this.xL = toBN(xL)
         this.xR = toBN(xR)
+        // console.log(this.xL)
+        // console.log(this.xR)
     })
 
     it("MiMCHasherCircomlib should match js implementation", async () => {
-        const result = await this.mimcHasherCircomlib.MiMCSponge(1, 1)
+        const result = await this.mimcHasherCircomlib.MiMCSponge(1, 2)
         const xL = toBN(result.xL)
         const xR = toBN(result.xR)
         expect(xL).to.be.equal(this.xL)
@@ -36,7 +46,7 @@ describe('MiMCSponge', function() {
     })
 
     it("MiMCHasherPython should match js implementation", async () => {
-        const result = await this.mimcHasherPython.MiMCSponge(1, 1)
+        const result = await this.mimcHasherPython.MiMCSponge(1, 2)
         const xL = toBN(result.xL)
         const xR = toBN(result.xR)
         expect(xL).to.be.equal(this.xL)
@@ -44,7 +54,15 @@ describe('MiMCSponge', function() {
     })
 
     it("MiMCHasherYul should match js implementation", async () => {
-        const result = await this.mimcHasherYul.MiMCSponge(1, 1)
+        const result = await this.mimcHasherYul.MiMCSponge(1, 2)
+        const xL = toBN(result.xL)
+        const xR = toBN(result.xR)
+        expect(xL).to.be.equal(this.xL)
+        expect(xR).to.be.equal(this.xR)
+    })
+
+    it("MiMCSponge should match js implementation", async () => {
+        const result = await this.mimcSponge.MiMCSponge(1, 2)
         const xL = toBN(result.xL)
         const xR = toBN(result.xR)
         expect(xL).to.be.equal(this.xL)
@@ -64,6 +82,10 @@ describe('MiMCSponge', function() {
             'eth_estimateGas',
             [{to: this.mimcHasherYul.address, data: this.calldata}]
         )
+        const estimateMimcSponge = await ethers.provider.send(
+            'eth_estimateGas',
+            [{to: this.mimcSponge.address, data: this.calldata}]
+        )
         console.log('circomlib gas estimate: ',
             toBN(estimateCircomlib).toString()
         )
@@ -76,6 +98,11 @@ describe('MiMCSponge', function() {
             toBN(estimateYul).toString(),
             'relative to circomlib: ',
             Number(toBN(estimateYul))/Number(toBN(estimateCircomlib))
+        )
+        console.log('mimcSponge gas estimate: ',
+            toBN(estimateMimcSponge).toString(),
+            'relative to circomlib: ',
+            Number(toBN(estimateMimcSponge))/Number(toBN(estimateCircomlib))
         )
     })
 })
