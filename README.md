@@ -1,46 +1,28 @@
-# Update
-I've included raw assembly into a Yul contract, because now Solidity compiler enables this using the `verbatim` builtin function as of 0.8.5. This actually saved 10k gas on the merkle tree now! Interestingly, though, it takes longer to compute. On an L2 like Arbitrum, where gas pricing is related to computational time rather than per opcode gas costs, this should cost more. However, on L1 this can save 10k gas per merkle tree insertion.
-
-# MiMCSponge in Pure Solidity
-Here I test two different solidity implementations of the MiMCSponge hasher as used by Tornado cash. If we can get a pure solidity implementation, then the hasher contract can be included in the Merkle Tree, instead of being a library/external contract.
-
-The barrier to putting MiMCSponge into MerkleTreeWithHistory is having a pure solidity implementation. Here I test two different implementations and use `eth_estimateGas` to compare costs.
+# MiMCSponge in Solidity
+In an effort to reduce the gas cost of the TornadoCash MerkleTreeWithHistory contract, I set out to include the MiMCSponge hasher contract directly into the MerkleTreeWithHistory contract (this was a [recommendation](https://tornado.cash/audits/TornadoCash_contract_audit_ABDK.pdf) that ABDK consulting made in their audit of the TornadoCash contracts). After extensive testing, this is the final version.
 
 # Install and Test
 
   1. Simply clone the repo and then run `yarn` or `npm install .` in the root directory.
   2. Run `npx hardhat test` from the root directory.
 
-To generate the contract from python you need to install python web3 dependencies:
-```sh
-$ python3 -m venv venv
-$ source venv/bin/activate
-$ pip3 install -r requirements.txt
-```
-then you can generate the file using
-```
-(venv) $ python generate_mimchasher_contract.py
-```
-
-# Initial Results
-```sh
-circomlib gas estimate:  38804
-python gas estimate:  48282 relative to circomlib:  1.2442531697763117
-yul gas estimate:  83982 relative to circomlib:  2.16426141634883
-```
 
 # Final Results
-Next step is to plug this into the MerkleTree and compare costs.
+The results of the unit tests are below. I removed some old contracts, but the previous results can be found in older commits. Noteably, the recommendation that [Hari](https://twitter.com/_hrkrshnn) made to me was to change from the switch/case expression to `CODECOPY` instead, which reduced the gas cost a further 5k gas. In total, this is about 15k gas savings compared to the original contract!
 ```sh
-MerkleTree
-caller gas used:  914657
-  ✓ InsertCaller (432ms)
-caller gas used:  1292697
-  ✓ InsertCaller2 (497ms)
-internal gas used:  1255538
-  ✓ InsertInternal (437ms)
+MerkleTrees
+✓ MerkleTreeWithHistoryV1.yul::initialize should work (91ms)
 final gas used:  904133
-  ✓ InsertFinal (803ms)
+✓ MerkleTreeWithHistoryV1.yul::insert should work (1001ms)
+final gas used:  899793
+✓ MerkleTreeWithHistoryV3.yul::insert should work (846ms)
+✓ Both implementations should share the same last root
 
+MiMCSponge
+✓ MiMCHasherCircomlib should match js implementation
+✓ MerkleTreeWithHistory.yul::MiMCSponge should match js implementation
+✓ MerkleTreeWithHistoryV2.yul::MiMCSponge should match js implementation
+Circomlibjs::MiMCSponge gas estimate:  38804
+MerkleTreeWithHistory.yul::MiMCSponge gas estimate:  39142 relative to circomlib:  1.0087104422224513
+MerkleTreeWithHistoryV2.yul::MiMCSponge gas estimate:  39040 relative to circomlib:  1.0060818472322441
 ```
-`final gas used` is for the yul verbatim contract, and it's cheaper than the caller!

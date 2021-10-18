@@ -4,6 +4,7 @@
         "function MiMCSponge(uint256 in_xL, uint256 in_xR) public pure returns (uint256 xL, uint256 xR)",
         "function initialize(uint32 levels) public",
         "function insert(bytes32 leaf) public returns (uint256 index)",
-        "function getLastRoot() public view returns (bytes32 lastRoot)"
+        "function getLastRoot() public view returns (bytes32 lastRoot)",
+        "function zeros(uint256) public view returns (bytes32 zero)"
     ]
 }

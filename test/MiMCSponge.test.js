@@ -8,7 +8,8 @@ const {
 const { mimcsponge } = require('circomlib')
 const genContract = require('../scripts/mimcsponge_gencontract.js')
 
-const mimcJson = require('./MiMC.json')
+const merkleTreeV1 = require('../remix/MerkleTreeWithHistoryV1.json')
+const merkleTreeV2 = require('../remix/MerkleTreeWithHistoryV2.json')
 
 const toBN = n => new ethers.BigNumber.from(n.toString())
 
@@ -22,19 +23,48 @@ describe('MiMCSponge', function() {
         )
         this.mimcSponge = await deployWithAbiAndBytecode(
             'MiMCSponge',
-            mimcJson.abi,
-            mimcJson.bytecode
+            merkleTreeV1.abi,
+            merkleTreeV1.bytecode
         )
-        this.mimcHasherPython = await deployContract('MiMCHasherPython')
-        this.mimcHasherYul = await deployContract('MiMCHasherYul')
-        this.calldata = this.mimcHasherPython.interface.encodeFunctionData(
+        this.mimcSponge2 = await deployWithAbiAndBytecode(
+            'MiMCSponge2',
+            merkleTreeV2.abi,
+            merkleTreeV2.bytecode
+        )
+        this.calldata = this.mimcSponge.interface.encodeFunctionData(
             'MiMCSponge(uint,uint)', [1, 2]
         )
         const { xL, xR } = mimcsponge.hash(1, 2, 0)
         this.xL = toBN(xL)
         this.xR = toBN(xR)
-        // console.log(this.xL)
-        // console.log(this.xR)
+    })
+
+    after(async() => {
+        const estimateCircomlib = await ethers.provider.send(
+            'eth_estimateGas',
+            [{to: this.mimcHasherCircomlib.address, data: this.calldata}]
+        )
+        const estimateMimcSponge = await ethers.provider.send(
+            'eth_estimateGas',
+            [{to: this.mimcSponge.address, data: this.calldata}]
+        )
+        const estimateMimcSponge2 = await ethers.provider.send(
+            'eth_estimateGas',
+            [{to: this.mimcSponge2.address, data: this.calldata}]
+        )
+        console.log('Circomlibjs::MiMCSponge gas estimate: ',
+            toBN(estimateCircomlib).toString()
+        )
+        console.log('MerkleTreeWithHistory.yul::MiMCSponge gas estimate: ',
+            toBN(estimateMimcSponge).toString(),
+            'relative to circomlib: ',
+            Number(toBN(estimateMimcSponge))/Number(toBN(estimateCircomlib))
+        )
+        console.log('MerkleTreeWithHistoryV2.yul::MiMCSponge gas estimate: ',
+            toBN(estimateMimcSponge2).toString(),
+            'relative to circomlib: ',
+            Number(toBN(estimateMimcSponge2))/Number(toBN(estimateCircomlib))
+        )
     })
 
     it("MiMCHasherCircomlib should match js implementation", async () => {
@@ -45,23 +75,7 @@ describe('MiMCSponge', function() {
         expect(xR).to.be.equal(this.xR)
     })
 
-    it("MiMCHasherPython should match js implementation", async () => {
-        const result = await this.mimcHasherPython.MiMCSponge(1, 2)
-        const xL = toBN(result.xL)
-        const xR = toBN(result.xR)
-        expect(xL).to.be.equal(this.xL)
-        expect(xR).to.be.equal(this.xR)
-    })
-
-    it("MiMCHasherYul should match js implementation", async () => {
-        const result = await this.mimcHasherYul.MiMCSponge(1, 2)
-        const xL = toBN(result.xL)
-        const xR = toBN(result.xR)
-        expect(xL).to.be.equal(this.xL)
-        expect(xR).to.be.equal(this.xR)
-    })
-
-    it("MiMCSponge should match js implementation", async () => {
+    it("MerkleTreeWithHistory.yul::MiMCSponge should match js implementation", async () => {
         const result = await this.mimcSponge.MiMCSponge(1, 2)
         const xL = toBN(result.xL)
         const xR = toBN(result.xR)
@@ -69,40 +83,11 @@ describe('MiMCSponge', function() {
         expect(xR).to.be.equal(this.xR)
     })
 
-    it("gas estimates", async() => {
-        const estimateCircomlib = await ethers.provider.send(
-            'eth_estimateGas',
-            [{to: this.mimcHasherCircomlib.address, data: this.calldata}]
-        )
-        const estimatePython = await ethers.provider.send(
-            'eth_estimateGas',
-            [{to: this.mimcHasherPython.address, data: this.calldata}]
-        )
-        const estimateYul = await ethers.provider.send(
-            'eth_estimateGas',
-            [{to: this.mimcHasherYul.address, data: this.calldata}]
-        )
-        const estimateMimcSponge = await ethers.provider.send(
-            'eth_estimateGas',
-            [{to: this.mimcSponge.address, data: this.calldata}]
-        )
-        console.log('circomlib gas estimate: ',
-            toBN(estimateCircomlib).toString()
-        )
-        console.log('python gas estimate: ',
-            toBN(estimatePython).toString(),
-            'relative to circomlib: ',
-            Number(toBN(estimatePython))/Number(toBN(estimateCircomlib))
-        )
-        console.log('yul gas estimate: ',
-            toBN(estimateYul).toString(),
-            'relative to circomlib: ',
-            Number(toBN(estimateYul))/Number(toBN(estimateCircomlib))
-        )
-        console.log('mimcSponge gas estimate: ',
-            toBN(estimateMimcSponge).toString(),
-            'relative to circomlib: ',
-            Number(toBN(estimateMimcSponge))/Number(toBN(estimateCircomlib))
-        )
+    it("MerkleTreeWithHistoryV2.yul::MiMCSponge should match js implementation", async () => {
+        const result = await this.mimcSponge2.MiMCSponge(1, 2)
+        const xL = toBN(result.xL)
+        const xR = toBN(result.xR)
+        expect(xL).to.be.equal(this.xL)
+        expect(xR).to.be.equal(this.xR)
     })
 })
